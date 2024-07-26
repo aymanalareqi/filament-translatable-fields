@@ -17,7 +17,7 @@ composer require alareqi/filament-translatable-fields
 Add the plugin to your desired Filament panel:
 
 ```php
-use Alareqi\FilamentTranslatableFields\Filament\Plugins\FilamentTranslatableFieldsPlugin;
+use Alareqi\FilamentTranslatableFields\FilamentTranslatableFieldsPlugin;
 
 class FilamentPanelProvider extends PanelProvider
 {
