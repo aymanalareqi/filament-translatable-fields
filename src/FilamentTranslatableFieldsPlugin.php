@@ -6,7 +6,9 @@ use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Tabs;
+use Filament\Infolists\Components\Entry;
 use Filament\Panel;
+use Filament\Tables\Columns\Column;
 use Illuminate\Support\HtmlString;
 
 class FilamentTranslatableFieldsPlugin implements Plugin
@@ -96,6 +98,14 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                 ->extraAttributes(['class' => 'translatable-field-tabs']);
 
             return $tabsField;
+        });
+        Entry::macro('translatable', function () {
+            $this->label($this->getLabel());
+            return $this;
+        });
+        Column::macro('translatable', function () {
+            $this->label($this->getLabel());
+            return $this;
         });
     }
 }
