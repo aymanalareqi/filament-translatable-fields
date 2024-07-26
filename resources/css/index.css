@@ -1,0 +1,17 @@
+@import '../../vendor/filament/filament/resources/css/theme.css';
+
+.translatable-field-tabs .fi-tabs {
+    display: none;
+}
+
+.translatable-field-tabs .fi-fo-tabs-tab.fi-active {
+    margin-top: 0px !important;
+}
+
+.translatable-field-tabs .translatable-field-locale-select {
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    border-radius: 9999px;
+    border-width: 0.1px;
+    font-size: 0.9rem;
+}
