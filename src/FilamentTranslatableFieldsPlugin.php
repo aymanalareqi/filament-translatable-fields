@@ -7,7 +7,10 @@ use Filament\Contracts\Plugin;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Tabs;
 use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\Tabs as ComponentsTabs;
+use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Panel;
+use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Columns\Column;
 use Illuminate\Support\HtmlString;
 
@@ -74,7 +77,8 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                     $localeSelect = "<select class='translatable-field-locale-select' x-model='tab'>";
                     $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
                         $c_locale = is_string($key2) ? $key2 : $label2;
-                        return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$label2}</option>";
+                        $llabel = is_string($key2) ? $key2 : locale_get_display_name($c_locale, app()->getLocale());
+                        return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
                     })->implode("");
                     $localeSelect .= "</select>";
                     // dd($localeSelect);
@@ -99,12 +103,50 @@ class FilamentTranslatableFieldsPlugin implements Plugin
 
             return $tabsField;
         });
-        Entry::macro('translatable', function () {
-            $this->label($this->getLabel());
+        Entry::macro('translatable', function ($condition = true, array | Closure | null $customLocales = null) use ($supportedLocales) {
+            $entry = $this->getClone();
+
+            $tabs = collect($customLocales  ?? $supportedLocales)
+                ->map(function ($label, $key) use ($entry, $customLocales, $supportedLocales) {
+                    $locale = is_string($key) ? $key : $label;
+                    $localeSelect = "<select class='translatable-field-locale-select' x-model='tab'>";
+                    $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
+                        $c_locale = is_string($key2) ? $key2 : $label2;
+                        $llabel = is_string($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
+                        return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
+                    })->implode("");
+                    $localeSelect .= "</select>";
+                    $newEntry =  $entry->getClone();
+                    $newEntry
+                        ->name("{$entry->getName()}.{$locale}")
+                        ->label($entry->getLabel() . " ({$locale})")
+                        ->statePath("{$entry->getStatePath(false)}.{$locale}")
+                        ->getStateUsing(function ($record) use ($entry, $locale) {
+                            return $record->getTranslation($entry->getName(), $locale);
+                        })
+                        ->hintIcon('heroicon-o-language', 'Translatable Field')
+                        ->hint(new HtmlString($localeSelect));
+                    return Tab::make($locale)
+                        ->label(is_string($key) ? $label : strtoupper($locale))
+                        ->schema([
+                            $newEntry
+                        ]);
+                })
+                ->toArray();
+            return   ComponentsTabs::make('translations')
+                ->tabs($tabs)
+                ->contained(false)
+                ->extraAttributes(['class' => 'translatable-field-tabs']);;
             return $this;
         });
         Column::macro('translatable', function () {
-            $this->label($this->getLabel());
+            $label = $this->getLabel();
+            $this->label(function ($livewire) use ($label) {
+
+                $activeLocale = $livewire->getActiveTableLocale();
+
+                return $label . " ($activeLocale)";
+            });
             return $this;
         });
     }
