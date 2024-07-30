@@ -77,7 +77,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                     $localeSelect = "<select class='translatable-field-locale-select' x-model='tab'>";
                     $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
                         $c_locale = is_string($key2) ? $key2 : $label2;
-                        $llabel = is_string($key2) ? $key2 : locale_get_display_name($c_locale, app()->getLocale());
+                        $llabel = !is_string($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
                         return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
                     })->implode("");
                     $localeSelect .= "</select>";
