@@ -6,6 +6,8 @@
 This package adds a way to make all filament fields translatable.
 It uses the `spatie/laravel-translatable` package in the background.
 
+Compatible with Laravel 10, 11, and 12.
+
 ## Installation
 
 You can install the package via composer:
