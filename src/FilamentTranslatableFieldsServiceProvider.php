@@ -10,12 +10,10 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
 {
-    public static string $name = 'alareqi-filament-translatable-fields';
-
     public function configurePackage(Package $package): void
     {
         $package
-            ->name(static::$name)
+            ->name('alareqi-filament-translatable-fields')
             ->hasInstallCommand(function (InstallCommand $command) {
                 $composerFile = file_get_contents(__DIR__ . '/../composer.json');
 

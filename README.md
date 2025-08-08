@@ -6,10 +6,7 @@
 This package adds a way to make all filament fields translatable.
 It uses the `spatie/laravel-translatable` package in the background.
 
-Compatible with:
-- Laravel 10, 11, and 12
-- Filament 3.x and 4.x
-- PHP 8.2+
+Compatible with Laravel 10, 11, and 12.
 
 ## Installation
 
@@ -17,22 +14,6 @@ You can install the package via composer:
 
 ```bash
 composer require alareqi/filament-translatable-fields
-```
-
-### Filament v4 Support
-
-This package supports both Filament v3 and v4. For Filament v4 (currently in beta), you may need to set your composer minimum stability to beta:
-
-```bash
-composer config minimum-stability beta
-```
-
-Or add this to your `composer.json`:
-
-```json
-{
-    "minimum-stability": "beta"
-}
 ```
 
 Add the plugin to your desired Filament panel:
@@ -107,37 +88,6 @@ This package will substitute the original field with a `Filament\Forms\Component
 
 All chained methods you add before calling `->translatable()` will be applied to the original field.
 All chained methods you add after calling `->translatable()` will be applied to the `Filament\Forms\Components\Tabs` component.
-
-## Upgrading to v2.0 (Filament v4 Support)
-
-### Requirements
-
-- PHP 8.2 or higher
-- Laravel 10, 11, or 12
-- Filament 3.x or 4.x
-
-### For Filament v4 Users
-
-If you want to use Filament v4 (currently in beta), you need to configure Composer to allow beta packages:
-
-```bash
-composer config minimum-stability beta
-```
-
-Then update the package:
-
-```bash
-composer update alareqi/filament-translatable-fields
-```
-
-### For Filament v3 Users
-
-No changes are required. The package continues to work with Filament v3 without any modifications to your code.
-
-### Breaking Changes
-
-- **PHP Version**: Minimum PHP version is now 8.2 (previously 8.0)
-- **Composer Stability**: Package now requires minimum stability "beta" for Filament v4 support
 
 ## Changelog
 
