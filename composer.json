@@ -11,10 +11,14 @@
     ],
     "require": {
         "php": "^8.2",
-        "filament/filament": "^3.2",
+        "filament/filament": "^3.2|^4.0",
         "laravel/framework": "^10.0|^11.0|^12.0",
         "spatie/laravel-package-tools": "^1.16",
         "spatie/laravel-translatable": "^6.6"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0|^11.0"
     },
     "autoload": {
         "psr-4": {
@@ -23,6 +27,11 @@
         "files": [
             "src\\Helpers\\helpers.php"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Alareqi\\FilamentTranslatableFields\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "laravel": {
@@ -34,6 +43,6 @@
     "config": {
         "sort-packages": true
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "beta",
     "prefer-stable": true
 }
