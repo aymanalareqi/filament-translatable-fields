@@ -10,7 +10,6 @@ use Filament\Infolists\Components\Entry;
 use Filament\Infolists\Components\Tabs as ComponentsTabs;
 use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Panel;
-use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Columns\Column;
 use Illuminate\Support\HtmlString;
 
@@ -133,11 +132,10 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         ]);
                 })
                 ->toArray();
-            return   ComponentsTabs::make('translations')
+            return ComponentsTabs::make('translations')
                 ->tabs($tabs)
                 ->contained(false)
-                ->extraAttributes(['class' => 'translatable-field-tabs']);;
-            return $this;
+                ->extraAttributes(['class' => 'translatable-field-tabs']);
         });
         Column::macro('translatable', function () {
             $label = $this->getLabel();
