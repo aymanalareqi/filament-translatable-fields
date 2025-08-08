@@ -5,11 +5,10 @@ namespace Alareqi\FilamentTranslatableFields;
 use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Forms\Components\Field;
-use Filament\Forms\Components\Tabs;
 use Filament\Infolists\Components\Entry;
-use Filament\Infolists\Components\Tabs as ComponentsTabs;
-use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Panel;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\Column;
 use Illuminate\Support\HtmlString;
 
@@ -81,7 +80,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                     })->implode("");
                     $localeSelect .= "</select>";
                     // dd($localeSelect);
-                    return Tabs\Tab::make($locale)
+                    return Tab::make($locale)
                         ->label(is_string($key) ? $label : strtoupper($locale))
                         ->schema([
                             $field
@@ -132,7 +131,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         ]);
                 })
                 ->toArray();
-            return ComponentsTabs::make('translations')
+            return Tabs::make('translations')
                 ->tabs($tabs)
                 ->contained(false)
                 ->extraAttributes(['class' => 'translatable-field-tabs']);

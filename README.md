@@ -6,11 +6,23 @@
 This package adds a way to make all filament fields translatable.
 It uses the `spatie/laravel-translatable` package in the background.
 
-Compatible with Laravel 10, 11, and 12.
+**This version is specifically designed for Filament v4.**
+
+## Requirements
+
+- **Filament v4.0+** (currently in beta)
+- **Laravel 10, 11, or 12**
+- **PHP 8.2+**
 
 ## Installation
 
-You can install the package via composer:
+Since Filament v4 is currently in beta, you need to configure Composer to allow beta packages:
+
+```bash
+composer config minimum-stability beta
+```
+
+Then install the package:
 
 ```bash
 composer require alareqi/filament-translatable-fields
@@ -84,10 +96,27 @@ TextInput::make('name')
 
 ### Good to know
 
-This package will substitute the original field with a `Filament\Forms\Components\Tabs` component. This component will render the original field for each locale.
+This package will substitute the original field with a `Filament\Schemas\Components\Tabs` component. This component will render the original field for each locale.
 
 All chained methods you add before calling `->translatable()` will be applied to the original field.
-All chained methods you add after calling `->translatable()` will be applied to the `Filament\Forms\Components\Tabs` component.
+All chained methods you add after calling `->translatable()` will be applied to the `Filament\Schemas\Components\Tabs` component.
+
+## Filament v4 Changes
+
+This version has been updated for Filament v4 with the following changes:
+
+- **Unified Schema Components**: All Tab components now use the unified `Filament\Schemas\Components\Tabs\Tab` namespace
+- **Updated Dependencies**: Requires Filament v4.0+ and PHP 8.2+
+- **Beta Stability**: Requires `minimum-stability: beta` in composer.json due to Filament v4 beta status
+- **Enhanced Testing**: Includes comprehensive test suite for v4 compatibility
+
+## Migration from v3
+
+If you're upgrading from the Filament v3 version of this package:
+
+1. Update your `composer.json` minimum stability to `beta`
+2. Update the package: `composer update alareqi/filament-translatable-fields`
+3. No code changes are required - the API remains the same
 
 ## Changelog
 
