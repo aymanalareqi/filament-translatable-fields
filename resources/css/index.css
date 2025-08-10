@@ -3,7 +3,7 @@
         display: none;
     }
 
-    .fi-fo-tabs-tab.fi-active {
+    .fi-sc-tabs-tab.fi-active {
         margin-top: 0px !important;
     }
 
@@ -19,4 +19,10 @@
 [dir=rtl] .translatable-field-tabs .translatable-field-locale-select {
     padding-right: 0.75rem;
     padding-left: 2.5rem;
+}
+
+.fi-sc-section .translatable-field-tabs {
+    .fi-sc-tabs-tab.fi-active {
+        padding: 0px !important;
+    }
 }
