@@ -26,3 +26,9 @@
         padding: 0px !important;
     }
 }
+
+.fi-sc-tabs-tab.fi-active .translatable-field-tabs {
+    .fi-sc-tabs-tab.fi-active {
+        padding: 0px !important;
+    }
+}
