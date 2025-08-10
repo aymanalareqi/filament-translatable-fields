@@ -72,7 +72,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
             $tabs = collect($customLocales  ?? $supportedLocales)
                 ->map(function ($label, $key) use ($field, $customLocales, $supportedLocales) {
                     $locale = is_string($key) ? $key : $label;
-                    $localeSelect = "<select class='translatable-field-locale-select' x-model='tab'>";
+                    $localeSelect = "<select class='translatable-field-locale-select fi-select-input fi-input-wrp' x-model='tab'>";
                     $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
                         $c_locale = is_string($key2) ? $key2 : $label2;
                         $llabel = !is_integer($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
