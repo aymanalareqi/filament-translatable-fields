@@ -68,13 +68,13 @@ class FilamentTranslatableFieldsPlugin implements Plugin
              * @var Field $this
              */
             $field = $this->getClone();
-
-            $tabs = collect($customLocales  ?? $supportedLocales)
-                ->map(function ($label, $key) use ($field, $customLocales, $supportedLocales) {
+            $locales = $customLocales  ?? $supportedLocales;
+            $tabs = collect($locales)
+                ->map(function ($label, $key) use ($field, $locales) {
                     $locale = is_string($key) ? $key : $label;
                     $localeLabel = !is_integer($key) ? $label : locale_get_display_name($locale, app()->getLocale());
                     $localeSelect = "<select class='translatable-field-locale-select fi-select-input fi-input-wrp' x-model='tab'>";
-                    $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
+                    $localeSelect .= collect($locales)->map(function ($label2, $key2) use ($locale) {
                         $c_locale = is_string($key2) ? $key2 : $label2;
                         $llabel = !is_integer($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
                         return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
@@ -87,7 +87,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                             $field
                                 ->getClone()
                                 ->name("{$field->getName()}.{$locale}")
-                                ->label($field->getLabel() . " ({$localeLabel})")
+                                ->label($field->getLabel() . " [{$localeLabel}]")
                                 ->statePath("{$field->getStatePath(false)}.{$locale}")
                                 ->hintIcon('heroicon-o-language', 'Translatable Field')
                                 ->hint(new HtmlString($localeSelect)),
@@ -106,13 +106,13 @@ class FilamentTranslatableFieldsPlugin implements Plugin
         });
         Entry::macro('translatable', function ($condition = true, array | Closure | null $customLocales = null) use ($supportedLocales) {
             $entry = $this->getClone();
-
-            $tabs = collect($customLocales  ?? $supportedLocales)
-                ->map(function ($label, $key) use ($entry, $customLocales, $supportedLocales) {
+            $locales = $customLocales  ?? $supportedLocales;
+            $tabs = collect($locales)
+                ->map(function ($label, $key) use ($entry, $locales) {
                     $locale = is_string($key) ? $key : $label;
                     $localeLabel = !is_integer($key) ? $label : locale_get_display_name($locale, app()->getLocale());
                     $localeSelect = "<select class='translatable-field-locale-select fi-select-input fi-input-wrp' x-model='tab'>";
-                    $localeSelect .= collect($customLocales  ?? $supportedLocales)->map(function ($label2, $key2) use ($locale) {
+                    $localeSelect .= collect($locales)->map(function ($label2, $key2) use ($locale) {
                         $c_locale = is_string($key2) ? $key2 : $label2;
                         $llabel = !is_integer($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
                         return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
@@ -121,7 +121,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                     $newEntry =  $entry->getClone();
                     $newEntry
                         ->name("{$entry->getName()}.{$locale}")
-                        ->label($entry->getLabel() . " ({$localeLabel})")
+                        ->label($entry->getLabel() . " [{$localeLabel}]")
                         ->statePath("{$entry->getStatePath(false)}.{$locale}")
                         ->getStateUsing(function ($record) use ($entry, $locale) {
                             return $record->getTranslation($entry->getName(), $locale);
@@ -141,13 +141,16 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                 ->contained(false)
                 ->extraAttributes(['class' => 'translatable-field-tabs']);
         });
-        Column::macro('translatable', function () {
+        Column::macro('translatable', function () use ($supportedLocales) {
             $label = $this->getLabel();
-            $this->label(function ($livewire) use ($label) {
+            $locales = $customLocales  ?? $supportedLocales;
+            $this->label(function ($livewire) use ($label, $locales) {
 
                 $activeLocale = $livewire->getActiveTableLocale();
 
-                return $label . " ($activeLocale)";
+                $localeLabel = is_string(array_keys($locales)[0]) ? $locales[$activeLocale] : locale_get_display_name($activeLocale, app()->getLocale());
+
+                return $label . " [$localeLabel]";
             });
             return $this;
         });
