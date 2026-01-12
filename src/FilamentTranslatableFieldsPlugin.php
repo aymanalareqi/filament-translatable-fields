@@ -58,6 +58,14 @@ class FilamentTranslatableFieldsPlugin implements Plugin
     {
         $supportedLocales = $this->getSupportedLocales();
 
+        // Add macro for locale-specific validation rules
+        Field::macro('localeValidation', function (Closure $validationRules) {
+            /** @var Field $this */
+            // Store the locale validation closure directly on the field object
+            $this->localeValidationRules = $validationRules;
+            return $this;
+        });
+
         Field::macro('translatable', function (bool $translatable = true, array | Closure | null $customLocales = null) use ($supportedLocales) {
             if (!$translatable) {
                 return $this;
@@ -69,8 +77,13 @@ class FilamentTranslatableFieldsPlugin implements Plugin
              */
             $field = $this->getClone();
             $locales = $customLocales  ?? $supportedLocales;
+
+            // Get locale validation rules if they exist
+            $localeValidationRules = property_exists($field, 'localeValidationRules')
+                ? $field->localeValidationRules
+                : null;
             $tabs = collect($locales)
-                ->map(function ($label, $key) use ($field, $locales) {
+                ->map(function ($label, $key) use ($field, $locales, $localeValidationRules) {
                     $locale = is_string($key) ? $key : $label;
                     $localeLabel = !is_integer($key) ? $label : locale_get_display_name($locale, app()->getLocale());
                     $localeSelect = "<select class='translatable-field-locale-select fi-select-input fi-input-wrp' x-model='tab'>";
@@ -80,17 +93,32 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
                     })->implode("");
                     $localeSelect .= "</select>";
+
+                    // Clone the field for this locale
+                    $localeField = $field
+                        ->getClone()
+                        ->name("{$field->getName()}.{$locale}")
+                        ->label($field->getLabel() . " [{$localeLabel}]")
+                        ->statePath("{$field->getStatePath(false)}.{$locale}")
+                        ->hintIcon('heroicon-o-language', 'Translatable Field')
+                        ->hint(new HtmlString($localeSelect));
+
+                    // Apply locale-specific validation rules if they exist
+                    if ($localeValidationRules !== null) {
+                        $rules = $localeValidationRules($locale);
+                        if (!empty($rules)) {
+                            if (in_array('required', $rules)) {
+                                $localeField->required();
+                            }
+                            $localeField->rules($rules);
+                        }
+                    }
+
                     $tab = Tab::make($locale)
                         ->label(is_string($key) ? $label : strtoupper($locale))
                         ->key("-{$locale}-tab")
                         ->schema([
-                            $field
-                                ->getClone()
-                                ->name("{$field->getName()}.{$locale}")
-                                ->label($field->getLabel() . " [{$localeLabel}]")
-                                ->statePath("{$field->getStatePath(false)}.{$locale}")
-                                ->hintIcon('heroicon-o-language', 'Translatable Field')
-                                ->hint(new HtmlString($localeSelect)),
+                            $localeField,
                         ]);
                     // dd($localeSelect);
                     return $tab;

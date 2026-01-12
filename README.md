@@ -10,7 +10,7 @@ It uses the `spatie/laravel-translatable` package in the background.
 
 ## Requirements
 
-- **Filament v4.0+** (currently in beta)
+- **Filament v4.0+**
 - **Laravel 10, 11, or 12**
 - **PHP 8.2+**
 
@@ -93,6 +93,80 @@ TextInput::make('name')
     ->label('Name')
     ->translatable(true, ['en' => 'English', 'ar' => 'العربية', 'fr' => 'French']),
 ```
+
+## Locale-Based Validation
+
+You can apply different validation rules to different locales using the `->localeValidation()` method. This is useful when you want to make certain locales required while others are optional, or apply different validation constraints per locale.
+
+### Basic Usage
+
+```php
+use Filament\Forms\Components\TextInput;
+
+TextInput::make('name')
+    ->label('Name')
+    ->localeValidation(function ($locale) {
+        return match($locale) {
+            'en' => ['required', 'min:3', 'max:255'],
+            'ar' => ['required', 'min:2', 'max:255'],
+            default => ['nullable', 'max:255']
+        };
+    })
+    ->translatable(),
+```
+
+### Required Primary Locale, Optional Secondary Locales
+
+A common pattern is to require the primary locale (e.g., English) while making other locales optional:
+
+```php
+TextInput::make('description')
+    ->label('Description')
+    ->localeValidation(function ($locale) {
+        return match($locale) {
+            'en' => ['required', 'max:500'],
+            default => ['nullable', 'max:500']
+        };
+    })
+    ->translatable(),
+```
+
+### Different Rules Per Locale
+
+You can apply completely different validation rules for each locale:
+
+```php
+TextInput::make('email')
+    ->label('Email')
+    ->localeValidation(function ($locale) {
+        return match($locale) {
+            'en' => ['required', 'email'],
+            'ar' => ['nullable', 'email'],
+            'fr' => ['nullable']
+        };
+    })
+    ->translatable(),
+```
+
+### All Locales Required
+
+If you want all locales to have the same validation rules:
+
+```php
+TextInput::make('title')
+    ->label('Title')
+    ->localeValidation(function ($locale) {
+        return ['required', 'min:3'];
+    })
+    ->translatable(),
+```
+
+### Important Notes
+
+- `localeValidation()` should be called **before** `translatable()`
+- The closure receives the locale code as a parameter
+- You can return any valid Laravel validation rules (array format)
+- If no validation rules are specified for a locale, no extra validation is applied
 
 ### Good to know
 
