@@ -2,6 +2,17 @@
 
 All notable changes to `filament-translatable-fields` will be documented in this file.
 
+## 2.0.1 - 2025-XX-XX - Laravel 13 Support
+
+### Added
+- **Laravel 13 Support**: Full compatibility with Laravel 13
+
+### Changed
+- **Updated Dependencies**: Now supports Laravel 10, 11, 12, and 13
+
+### Migration Guide
+1. Run `composer update alareqi/filament-translatable-fields`
+
 ## 2.0.0 - 2024-XX-XX - Filament v4 Support
 
 ### Added
