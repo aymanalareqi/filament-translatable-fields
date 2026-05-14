@@ -66,7 +66,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
             return $this;
         });
 
-        Field::macro('translatable', function (bool $translatable = true, array | Closure | null $customLocales = null) use ($supportedLocales) {
+        Field::macro('translatable', function (bool $translatable = true, array|Closure|null $customLocales = null) use ($supportedLocales) {
             if (!$translatable) {
                 return $this;
             }
@@ -76,7 +76,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
              * @var Field $this
              */
             $field = $this->getClone();
-            $locales = $customLocales  ?? $supportedLocales;
+            $locales = $customLocales ?? $supportedLocales;
 
             // Get locale validation rules if they exist
             $localeValidationRules = property_exists($field, 'localeValidationRules')
@@ -101,11 +101,12 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         ->label($field->getLabel() . " [{$localeLabel}]")
                         ->statePath("{$field->getStatePath(false)}.{$locale}")
                         ->hintIcon('heroicon-o-language', 'Translatable Field')
+                        ->required(false)
                         ->hint(new HtmlString($localeSelect));
 
                     // Apply locale-specific validation rules if they exist
                     if ($localeValidationRules !== null) {
-                        $rules = $localeValidationRules($locale);
+                        $rules = $localeValidationRules($locale, $field);
                         if (!empty($rules)) {
                             if (in_array('required', $rules)) {
                                 $localeField->required();
@@ -132,9 +133,9 @@ class FilamentTranslatableFieldsPlugin implements Plugin
 
             return $tabsField;
         });
-        Entry::macro('translatable', function ($condition = true, array | Closure | null $customLocales = null) use ($supportedLocales) {
+        Entry::macro('translatable', function ($condition = true, array|Closure|null $customLocales = null) use ($supportedLocales) {
             $entry = $this->getClone();
-            $locales = $customLocales  ?? $supportedLocales;
+            $locales = $customLocales ?? $supportedLocales;
             $tabs = collect($locales)
                 ->map(function ($label, $key) use ($entry, $locales) {
                     $locale = is_string($key) ? $key : $label;
@@ -146,7 +147,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         return "<option value='-{$c_locale}-tab'" . ($c_locale == $locale ? ' selected' : '') . ">{$llabel}</option>";
                     })->implode("");
                     $localeSelect .= "</select>";
-                    $newEntry =  $entry->getClone();
+                    $newEntry = $entry->getClone();
                     $newEntry
                         ->name("{$entry->getName()}.{$locale}")
                         ->label($entry->getLabel() . " [{$localeLabel}]")
@@ -171,7 +172,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
         });
         Column::macro('translatable', function () use ($supportedLocales) {
             $label = $this->getLabel();
-            $locales = $customLocales  ?? $supportedLocales;
+            $locales = $customLocales ?? $supportedLocales;
             $this->label(function ($livewire) use ($label, $locales) {
 
                 $activeLocale = $livewire->getActiveTableLocale();
