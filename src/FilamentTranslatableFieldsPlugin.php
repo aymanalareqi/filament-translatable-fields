@@ -85,7 +85,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
         });
 
         $plugin = $this;
-        Field::macro('translatable', function (bool $translatable = true, array|Closure|null $customLocales = null) use ($plugin): Field|Tabs {
+        Field::macro('translatable', function (bool $translatable = true, array|Closure|null $customLocales = null, ?Closure $configure = null) use ($plugin): Field|Tabs {
             /** @var Field $this */
             if (! $translatable) {
                 return $this;
@@ -109,8 +109,7 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                 $localeField = $field->getClone()
                     ->name($field->getName().'.'.$locale)
                     ->label($field->getLabel())
-                    ->statePath($field->getStatePath(false).'.'.$locale)
-                    ->required(false);
+                    ->statePath($field->getStatePath(false).'.'.$locale);
 
                 if ($localeValidationRules !== null) {
                     $rules = $localeValidationRules($locale, $field);
@@ -120,6 +119,10 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                         }
                         $localeField->rules($rules);
                     }
+                }
+
+                if ($configure !== null) {
+                    $configure($localeField, $locale);
                 }
 
                 LocaleSwitcher::configure($localeField, $locale, $options);

@@ -114,6 +114,90 @@ class InlineLocaleSwitcherTest extends TestCase
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
     }
+
+    public function test_shared_required_rules_validate_every_locale(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.title.en', '')
+            ->set('data.title.ar', '')
+            ->call('save')
+            ->assertHasErrors(['data.title.en' => 'required', 'data.title.ar' => 'required'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_shared_length_rules_are_preserved_on_locale_fields(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.title.en', 'Eleven chars')
+            ->call('save')
+            ->assertHasErrors(['data.title.en' => 'max'])
+            ->assertHasNoErrors(['data.title.ar'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_locale_configuration_can_make_a_shared_required_field_optional(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.summary.ar', '')
+            ->set('data.summary.en', '')
+            ->call('save')
+            ->assertHasErrors(['data.summary.ar' => 'required'])
+            ->assertHasNoErrors(['data.summary.en'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_locale_length_overrides_do_not_leak_to_other_locales(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.summary.ar', 'مل')
+            ->set('data.summary.en', 'Eleven chars')
+            ->call('save')
+            ->assertHasErrors(['data.summary.ar' => 'min', 'data.summary.en' => 'max'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_locale_configuration_validates_nested_fields_with_custom_locales(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.links', [['label' => ['ar' => '', 'de' => '']]])
+            ->call('save')
+            ->assertHasErrors(['data.links.0.label.ar' => 'required'])
+            ->assertHasNoErrors(['data.links.0.label.de'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_optional_locales_and_configured_fields_can_be_saved(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.summary.ar', 'ملخص عربي طويل')
+            ->set('data.links', [['label' => ['ar' => 'رابط', 'de' => '']]])
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('saved.title.en', 'Title')
+            ->assertSet('saved.summary.ar', 'ملخص عربي طويل')
+            ->assertSet('saved.body.ar', '<p>محتوى عربي</p>')
+            ->assertSet('saved.links.0.label.ar', 'رابط');
+    }
+
+    public function test_locale_configuration_validates_required_rich_editor_content(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.body.ar', null)
+            ->call('save')
+            ->assertHasErrors(['data.body.ar' => 'required'])
+            ->assertHasNoErrors(['data.body.en'])
+            ->assertSet('saved', []);
+    }
+
+    public function test_standard_validation_closures_receive_the_locale_field(): void
+    {
+        Livewire::test(FluentTranslationsForm::class)
+            ->set('data.conditional.ar', '')
+            ->call('save')
+            ->assertHasErrors(['data.conditional.ar' => 'required'])
+            ->assertHasNoErrors(['data.conditional.en'])
+            ->assertSet('saved', []);
+    }
 }
 
 class InlineTranslationsForm extends Component implements HasActions, HasForms
@@ -150,5 +234,44 @@ class InlineTranslationsForm extends Component implements HasActions, HasForms
     public function render(): string
     {
         return '<div><form wire:submit="save">{{ $this->form }}<button type="submit">Save</button></form></div>';
+    }
+}
+
+class FluentTranslationsForm extends InlineTranslationsForm
+{
+    public function mount(): void
+    {
+        $this->form->fill([
+            'title' => ['en' => 'Title', 'ar' => 'عنوان'],
+            'summary' => ['ar' => 'ملخص'],
+            'body' => ['ar' => ['type' => 'doc', 'content' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'محتوى عربي']]]]]],
+            'conditional' => ['ar' => 'مطلوب'],
+            'links' => [],
+        ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema->statePath('data')->schema([
+            TextInput::make('title')->required()->maxLength(10)->translatable(),
+            Textarea::make('summary')->required()->maxLength(20)
+                ->translatable(configure: fn (Textarea $field, string $locale): Textarea => $field
+                    ->required($locale === 'ar')
+                    ->minLength($locale === 'ar' ? 3 : 2)
+                    ->maxLength($locale === 'ar' ? 20 : 10)),
+            RichEditor::make('body')->required()->toolbarButtons(['bold', 'italic'])
+                ->translatable(configure: fn (RichEditor $field, string $locale): RichEditor => $field->required($locale === 'ar')),
+            TextInput::make('conditional')
+                ->required(fn (TextInput $component): bool => str_ends_with($component->getName(), '.ar'))
+                ->translatable(),
+            Repeater::make('links')->defaultItems(0)->schema([
+                TextInput::make('label')->maxLength(10)->translatable(
+                    customLocales: ['ar' => 'العربية', 'de' => 'German'],
+                    configure: function (TextInput $field, string $locale): void {
+                        $field->required($locale === 'ar');
+                    },
+                ),
+            ]),
+        ]);
     }
 }
