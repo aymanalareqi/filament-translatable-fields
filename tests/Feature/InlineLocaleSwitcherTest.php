@@ -17,16 +17,21 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\FormsServiceProvider;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\InfolistsServiceProvider;
 use Filament\Notifications\NotificationsServiceProvider;
 use Filament\Panel;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Schemas\SchemasServiceProvider;
 use Filament\Support\SupportServiceProvider;
 use Filament\Tables\TablesServiceProvider;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Component;
 use Livewire\Livewire;
 use Livewire\LivewireServiceProvider;
+use Spatie\Translatable\HasTranslations;
 
 class InlineLocaleSwitcherTest extends TestCase
 {
@@ -198,6 +203,39 @@ class InlineLocaleSwitcherTest extends TestCase
             ->assertHasNoErrors(['data.conditional.en'])
             ->assertSet('saved', []);
     }
+
+    public function test_infolists_render_translations_with_the_shared_switcher_and_preserve_hints(): void
+    {
+        Livewire::test(InlineTranslationsInfolist::class)
+            ->assertSeeHtml('translatable-locale-trigger')
+            ->assertSeeHtml('title-en-tab')
+            ->assertSeeHtml('body-en-tab')
+            ->assertSee('Original entry hint')
+            ->assertSee('English title')
+            ->assertSee('عنوان عربي')
+            ->assertSeeHtml('<strong>English body</strong>')
+            ->assertSeeHtml('<strong>محتوى عربي</strong>')
+            ->assertSee('🇸🇦')
+            ->assertDontSeeHtml('translatable-field-locale-select')
+            ->assertDontSee('Title [English]');
+    }
+
+    public function test_infolist_custom_locale_closures_escape_locale_labels(): void
+    {
+        Livewire::test(InlineTranslationsInfolist::class)
+            ->set('untrustedLabels', true)
+            ->assertSee('English title')
+            ->assertSeeHtml('&lt;script&gt;alert(1)&lt;/script&gt;')
+            ->assertDontSeeHtml('<script>alert(1)</script>');
+    }
+
+    public function test_infolist_translation_can_be_disabled(): void
+    {
+        $entry = TextEntry::make('title');
+
+        $this->assertSame($entry, $entry->translatable(false));
+        $this->assertSame($entry, $entry->translatable(fn (): bool => false));
+    }
 }
 
 class InlineTranslationsForm extends Component implements HasActions, HasForms
@@ -274,4 +312,40 @@ class FluentTranslationsForm extends InlineTranslationsForm
             ]),
         ]);
     }
+}
+
+class InlineTranslationsInfolist extends Component implements HasActions, HasSchemas
+{
+    use InteractsWithActions;
+    use InteractsWithSchemas;
+
+    public bool $untrustedLabels = false;
+
+    public function infolist(Schema $schema): Schema
+    {
+        return $schema->record(new InfolistTranslationRecord([
+            'title' => ['en' => 'English title', 'ar' => 'عنوان عربي'],
+            'body' => ['en' => '<strong>English body</strong>', 'ar' => '<strong>محتوى عربي</strong>'],
+        ]))->schema([
+            TextEntry::make('title')->label('Title')->hint('Original entry hint')->translatable(),
+            TextEntry::make('body')->label('Body')->html()->translatable(customLocales: fn (): array => [
+                'en' => $this->untrustedLabels ? '<script>alert(1)</script>' : 'English',
+                'ar' => 'العربية',
+            ]),
+        ]);
+    }
+
+    public function render(): string
+    {
+        return '<div>{{ $this->infolist }}</div>';
+    }
+}
+
+class InfolistTranslationRecord extends Model
+{
+    use HasTranslations;
+
+    protected $guarded = [];
+
+    public array $translatable = ['title', 'body'];
 }

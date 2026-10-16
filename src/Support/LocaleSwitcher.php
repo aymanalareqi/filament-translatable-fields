@@ -7,12 +7,13 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\RichEditor\RichEditorTool;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
 use Illuminate\Contracts\View\View;
 
 class LocaleSwitcher
 {
     /** @param array<string, array{label: string, tab: string, flag: ?string}> $options */
-    public static function configure(Field $field, string $locale, array $options): void
+    public static function configure(Field|Entry $field, string $locale, array $options): void
     {
         $data = ['locale' => $locale, 'options' => $options];
         $direction = in_array(strtolower(explode('-', str_replace('_', '-', $locale))[0]), ['ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb'], true) ? 'rtl' : 'ltr';
@@ -56,7 +57,7 @@ class LocaleSwitcher
         }
 
         $original = $field->getClone();
-        $field->hint(fn (Field $component): View => view('alareqi-filament-translatable-fields::hint', [
+        $field->hint(fn (Field|Entry $component): View => view('alareqi-filament-translatable-fields::hint', [
             ...$data,
             'originalHint' => $original->container($component->getContainer())->getHint(),
             'showSwitcher' => true,

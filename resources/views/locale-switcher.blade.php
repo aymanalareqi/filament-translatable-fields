@@ -1,4 +1,10 @@
-<x-filament::dropdown placement="bottom-end" :shift="true" class="translatable-locale-switcher" x-on:click.stop="">
+<x-filament::dropdown
+    placement="bottom-end"
+    :shift="true"
+    class="translatable-locale-switcher"
+    x-init="$nextTick(() => $refs.panel.setAttribute('role', 'menu'))"
+    x-on:click.stop=""
+>
     <x-slot name="trigger">
         <button
             type="button"
@@ -14,7 +20,7 @@
         </button>
     </x-slot>
 
-    <div class="translatable-locale-options" role="menu" aria-label="{{ __('alareqi-filament-translatable-fields::messages.change_language') }}">
+    <div class="translatable-locale-options" role="group" aria-label="{{ __('alareqi-filament-translatable-fields::messages.change_language') }}">
         @foreach ($options as $code => $option)
             <button
                 type="button"

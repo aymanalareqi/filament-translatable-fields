@@ -11,7 +11,7 @@ use Filament\Panel;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\Column;
-use Illuminate\Support\HtmlString;
+use Illuminate\Database\Eloquent\Model;
 
 class FilamentTranslatableFieldsPlugin implements Plugin
 {
@@ -133,42 +133,39 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                 ->tabs($tabs)->contained(false)
                 ->extraAttributes(['class' => 'translatable-field-tabs']);
         });
-        Entry::macro('translatable', function ($condition = true, array|Closure|null $customLocales = null) use ($supportedLocales) {
+        Entry::macro('translatable', function (bool|Closure $condition = true, array|Closure|null $customLocales = null) use ($plugin): Entry|Tabs {
+            /** @var Entry $this */
+            if (! $this->evaluate($condition)) {
+                return $this;
+            }
+
             $entry = $this->getClone();
-            $locales = $customLocales ?? $supportedLocales;
-            $tabs = collect($locales)
-                ->map(function ($label, $key) use ($entry, $locales) {
-                    $locale = is_string($key) ? $key : $label;
-                    $localeLabel = ! is_int($key) ? $label : locale_get_display_name($locale, app()->getLocale());
-                    $localeSelect = "<select class='translatable-field-locale-select fi-select-input fi-input-wrp' x-model='tab'>";
-                    $localeSelect .= collect($locales)->map(function ($label2, $key2) use ($locale) {
-                        $c_locale = is_string($key2) ? $key2 : $label2;
-                        $llabel = ! is_int($key2) ? $label2 : locale_get_display_name($c_locale, app()->getLocale());
+            $locales = $customLocales instanceof Closure ? $this->evaluate($customLocales) : ($customLocales ?? $plugin->getSupportedLocales());
+            $options = [];
+            foreach ($locales as $key => $label) {
+                $locale = is_string($key) ? $key : $label;
+                $options[$locale] = [
+                    'label' => is_string($key) ? $label : locale_get_display_name($locale, app()->getLocale()),
+                    'tab' => $entry->getName().'-'.$locale.'-tab',
+                    'flag' => $plugin->getLocaleFlags()[$locale] ?? null,
+                ];
+            }
 
-                        return "<option value='-{$c_locale}-tab'".($c_locale == $locale ? ' selected' : '').">{$llabel}</option>";
-                    })->implode('');
-                    $localeSelect .= '</select>';
-                    $newEntry = $entry->getClone();
-                    $newEntry
-                        ->name("{$entry->getName()}.{$locale}")
-                        ->label($entry->getLabel()." [{$localeLabel}]")
-                        ->statePath("{$entry->getStatePath(false)}.{$locale}")
-                        ->getStateUsing(function ($record) use ($entry, $locale) {
-                            return $record->getTranslation($entry->getName(), $locale);
-                        })
-                        ->hintIcon('heroicon-o-language', 'Translatable Field')
-                        ->hint(new HtmlString($localeSelect));
+            $tabs = [];
+            foreach ($options as $locale => $option) {
+                $localeEntry = $entry->getClone()
+                    ->name($entry->getName().'.'.$locale)
+                    ->label($entry->getLabel())
+                    ->statePath($entry->getStatePath(false).'.'.$locale)
+                    ->getStateUsing(function (Model $record) use ($entry, $locale): mixed {
+                        return $record->getTranslation($entry->getName(), $locale);
+                    });
 
-                    return Tab::make($locale)
-                        ->label(is_string($key) ? $label : strtoupper($locale))
-                        ->key("-{$locale}-tab")
-                        ->schema([
-                            $newEntry,
-                        ]);
-                })
-                ->toArray();
+                LocaleSwitcher::configure($localeEntry, $locale, $options);
+                $tabs[] = Tab::make($locale)->label($option['label'])->key($option['tab'])->schema([$localeEntry]);
+            }
 
-            return Tabs::make('translations')
+            return Tabs::make($entry->getName().'Translations')
                 ->tabs($tabs)
                 ->contained(false)
                 ->extraAttributes(['class' => 'translatable-field-tabs']);
