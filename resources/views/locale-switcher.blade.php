@@ -27,7 +27,11 @@
                 role="menuitemradio"
                 aria-checked="{{ $code === $locale ? 'true' : 'false' }}"
                 class="translatable-locale-option {{ $code === $locale ? 'translatable-locale-option-selected' : '' }}"
-                x-on:click="tab = @js($option['tab']); close()"
+                @isset($columnName)
+                    x-on:click.stop="close(); $wire.setTranslatableColumnLocale(@js($columnName), @js($code))"
+                @else
+                    x-on:click="tab = @js($option['tab']); close()"
+                @endisset
                 data-locale-option="{{ $code }}"
             >
                 @if ($option['flag'])

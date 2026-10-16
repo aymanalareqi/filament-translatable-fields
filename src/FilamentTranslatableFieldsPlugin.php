@@ -3,6 +3,7 @@
 namespace Alareqi\FilamentTranslatableFields;
 
 use Alareqi\FilamentTranslatableFields\Support\LocaleSwitcher;
+use Alareqi\FilamentTranslatableFields\Support\TranslatableColumn;
 use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Forms\Components\Field;
@@ -11,6 +12,7 @@ use Filament\Panel;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Tables\Columns\Column;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class FilamentTranslatableFieldsPlugin implements Plugin
@@ -73,8 +75,6 @@ class FilamentTranslatableFieldsPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        $supportedLocales = $this->getSupportedLocales();
-
         // Add macro for locale-specific validation rules
         Field::macro('localeValidation', function (Closure $validationRules) {
             /** @var Field $this */
@@ -170,17 +170,23 @@ class FilamentTranslatableFieldsPlugin implements Plugin
                 ->contained(false)
                 ->extraAttributes(['class' => 'translatable-field-tabs']);
         });
-        Column::macro('translatable', function () use ($supportedLocales) {
-            $label = $this->getLabel();
-            $locales = $customLocales ?? $supportedLocales;
-            $this->label(function ($livewire) use ($label, $locales) {
+        Column::macro('translatable', function (bool $translatable = true, array|Closure|null $customLocales = null) use ($plugin): Column {
+            /** @var Column $this */
+            if (! $translatable) {
+                return $this;
+            }
 
-                $activeLocale = $livewire->getActiveTableLocale();
+            $configuration = new TranslatableColumn(clone $this, $plugin, $customLocales);
+            $this->viewData(['translatableColumn' => $configuration])
+                ->label(fn (Column $column) => $configuration->label($column))
+                ->getStateUsing(fn (Column $column, Model $record): mixed => $configuration->state($column, $record))
+                ->extraAttributes(fn (Column $column): array => [
+                    'lang' => $configuration->locale($column),
+                    'dir' => LocaleSwitcher::direction($configuration->locale($column)),
+                ], merge: true);
 
-                $localeLabel = is_string(array_keys($locales)[0]) ? $locales[$activeLocale] : locale_get_display_name($activeLocale, app()->getLocale());
-
-                return $label." [$localeLabel]";
-            });
+            $this->searchQuery ??= fn (Column $column, Builder $query, string $search): Builder => $configuration->search($column, $query, $search);
+            $this->sortQuery ??= fn (Column $column, Builder $query, string $direction): Builder => $configuration->sort($column, $query, $direction);
 
             return $this;
         });

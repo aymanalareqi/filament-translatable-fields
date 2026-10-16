@@ -16,7 +16,7 @@ class LocaleSwitcher
     public static function configure(Field|Entry $field, string $locale, array $options): void
     {
         $data = ['locale' => $locale, 'options' => $options];
-        $direction = in_array(strtolower(explode('-', str_replace('_', '-', $locale))[0]), ['ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb'], true) ? 'rtl' : 'ltr';
+        $direction = self::direction($locale);
 
         if (method_exists($field, 'extraInputAttributes')) {
             $field->extraInputAttributes(['dir' => $direction, 'lang' => $locale], merge: true);
@@ -62,5 +62,10 @@ class LocaleSwitcher
             'originalHint' => $original->container($component->getContainer())->getHint(),
             'showSwitcher' => true,
         ]));
+    }
+
+    public static function direction(string $locale): string
+    {
+        return in_array(strtolower(explode('-', str_replace('_', '-', $locale))[0]), ['ar', 'fa', 'he', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb'], true) ? 'rtl' : 'ltr';
     }
 }

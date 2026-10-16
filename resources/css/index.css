@@ -7,6 +7,11 @@
 }
 .translatable-input-suffix, .translatable-field-hint { display: inline-flex; align-items: center; gap: .5rem; }
 .translatable-locale-switcher { position: relative; }
+.translatable-column-label { display: inline-flex; align-items: center; gap: .5rem; }
+.translatable-column-switcher { display: inline-flex; font-weight: normal; }
+.translatable-column-switcher .translatable-locale-trigger { min-width: 3.5rem; min-height: 1.75rem; padding: .15rem .5rem; font-size: .75rem; }
+.fi-ta-header-cell .translatable-column-switcher .translatable-locale-chevron,
+.fi-ta-header-cell .translatable-column-switcher .translatable-locale-check { color: inherit; }
 .fi-fo-text-input:has(.translatable-locale-switcher) { overflow: visible; }
 .translatable-locale-trigger {
     display: inline-flex;

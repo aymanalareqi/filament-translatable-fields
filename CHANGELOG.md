@@ -6,6 +6,8 @@ All notable changes to `filament-translatable-fields` will be documented in this
 
 ### Added
 
+- Independent language dropdowns in translatable table-column headers, with selected-locale display, search, and sorting for Eloquent attributes and relationships.
+- `InteractsWithTranslatableColumns` trait for resource list pages, relation managers, and standalone Livewire tables, with validated locale changes and pagination reset.
 - Shared language dropdown for form fields and infolist entries, using the panel's primary colors and dark mode styles.
 - Optional locale flags configured through the panel plugin's `localeFlags()` method.
 - Form-field `translatable(configure: ...)` callback receiving each localized field clone and its locale code.
@@ -21,6 +23,7 @@ All notable changes to `filament-translatable-fields` will be documented in this
 
 ### Fixed
 
+- Table-column `translatable()` now translates cell values and supports custom locales instead of only appending a locale to the heading.
 - Dropdown anchoring in rich editor toolbars and visibility inside text input wrappers.
 - Textarea switcher spacing to match text inputs.
 - Escaping of infolist locale labels and resolution of custom locale closures.

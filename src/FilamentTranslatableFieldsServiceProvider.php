@@ -2,8 +2,13 @@
 
 namespace Alareqi\FilamentTranslatableFields;
 
+use Alareqi\FilamentTranslatableFields\Support\TranslatableColumn;
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Facades\FilamentView;
+use Filament\Tables\Columns\Column;
+use Filament\Tables\View\TablesRenderHook;
+use Illuminate\Contracts\View\View;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -39,6 +44,24 @@ class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
             $this->getAssets(),
             $this->getAssetPackageName()
         );
+
+        if (TranslatableColumn::hasHeaderRenderHook()) {
+            FilamentView::registerRenderHook(TablesRenderHook::HEADER_CELL, function (array $data): View|string {
+                $column = $data['column'] ?? null;
+                if (! $column instanceof Column || ! ($configuration = TranslatableColumn::from($column))
+                    || ! method_exists($column->getLivewire(), 'setTranslatableColumnLocale')) {
+                    return '';
+                }
+
+                return view('alareqi-filament-translatable-fields::column-header-cell', [
+                    'column' => $column,
+                    'isReordering' => $data['isReordering'] ?? false,
+                    'columnName' => $column->getName(),
+                    'locale' => $configuration->locale($column),
+                    'options' => $configuration->options($column),
+                ]);
+            });
+        }
     }
 
     protected function getAssetPackageName(): ?string

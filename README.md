@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/alareqi/filament-translatable-fields.svg?style=flat-square)](https://packagist.org/packages/alareqi/filament-translatable-fields)
 [![Total Downloads](https://img.shields.io/packagist/dt/alareqi/filament-translatable-fields.svg?style=flat-square)](https://packagist.org/packages/alareqi/filament-translatable-fields)
 
-Make Filament form fields and infolist entries translatable using [Spatie Laravel Translatable](https://github.com/spatie/laravel-translatable). Each field or entry has its own language dropdown, styled with the panel's primary colors.
+Make Filament form fields, infolist entries, and table columns translatable using [Spatie Laravel Translatable](https://github.com/spatie/laravel-translatable). Each component has its own language dropdown, styled with the panel's primary colors.
 
 This README describes the current package source. See [Unreleased changes](CHANGELOG.md#unreleased) for features awaiting release.
 
@@ -183,9 +183,66 @@ TextEntry::make('description')
 
 Entries use the same primary-colored dropdown as forms, placed beside the label. Existing labels, hints, and formatting are preserved. Each entry switches independently, and translations are read from the record using Spatie's `getTranslation()` method.
 
+## Table columns
+
+Add `InteractsWithTranslatableColumns` to the Livewire component that owns the table, such as a resource's list page:
+
+```php
+use Alareqi\FilamentTranslatableFields\Concerns\InteractsWithTranslatableColumns;
+use Filament\Resources\Pages\ListRecords;
+
+class ListProducts extends ListRecords
+{
+    use InteractsWithTranslatableColumns;
+
+    protected static string $resource = ProductResource::class;
+}
+```
+
+Then configure the columns in the resource's table:
+
+```php
+use Filament\Tables\Columns\TextColumn;
+
+TextColumn::make('name')
+    ->label('Name')
+    ->searchable()
+    ->sortable()
+    ->translatable();
+
+TextColumn::make('category.name')
+    ->label('Category')
+    ->searchable(isIndividual: true)
+    ->sortable()
+    ->translatable();
+```
+
+Call `translatable()` after `label()`, `searchable()`, `sortable()`, and other column configuration. Unlike forms and infolists, it returns the original column rather than a `Tabs` wrapper.
+
+Each header gets the shared language dropdown. Selecting a language changes that column's displayed translations, global and individual search, and sorting. Other columns and the application locale keep their own language. The current search and sort stay active, and pagination returns to the first page. Choices belong to the current Livewire table instance and reset when the page is reloaded.
+
+Use the trait on relation managers or standalone Livewire table components too. Without it, a translated column reads the active table locale or application locale and displays a plain heading, without a dropdown. If the initial locale is unsupported, the first configured locale is used.
+
+Columns read translated attributes from Eloquent models, including relationships. Missing translations remain empty instead of falling back to another language, so the displayed language matches search and sorting. Use Filament's `placeholder()` or `default()` methods when needed. Existing formatting callbacks, cell attributes, and custom search or sort callbacks are retained. `translatable()` supplies the column's state callback; use `formatStateUsing()` to format the translated value.
+
+Custom search and sort callbacks take precedence over the package's locale-aware defaults. If a custom callback needs the selected locale, read it from the table component:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Livewire\Component;
+
+TextColumn::make('name')
+    ->searchable(query: function (Builder $query, string $search, Component $livewire): Builder {
+        $locale = $livewire->getTranslatableColumnLocale('name');
+
+        return $query->where("name->{$locale}", 'like', "%{$search}%");
+    })
+    ->translatable();
+```
+
 ## Custom locales
 
-Override the panel's locales for an individual form field or infolist entry:
+Override the panel's locales for an individual form field, infolist entry, or table column:
 
 ```php
 TextInput::make('name')
@@ -199,6 +256,11 @@ TextEntry::make('name')
     ->translatable(
         customLocales: fn (): array => ['ar' => 'العربية', 'en' => 'English'],
     );
+
+TextColumn::make('name')
+    ->searchable()
+    ->sortable()
+    ->translatable(customLocales: ['ar' => 'العربية', 'en' => 'English']);
 ```
 
 The existing positional syntax remains supported:
@@ -208,20 +270,23 @@ TextInput::make('name')
     ->translatable(true, ['ar' => 'العربية', 'en' => 'English']);
 ```
 
-Pass `false` as the first argument to leave a form field or infolist entry untranslated:
+Pass `false` as the first argument to leave a component untranslated:
 
 ```php
 TextInput::make('name')->translatable(false);
 TextEntry::make('name')->translatable(false);
+TextColumn::make('name')->translatable(false);
 ```
 
 Infolist entries also accept a closure returning the condition as their first argument.
 
 ## Method ordering
 
-`translatable()` wraps the localized fields or entries in `Filament\Schemas\Components\Tabs`, with the tab bar hidden in favor of the language dropdown.
+For forms and infolists, `translatable()` wraps the localized fields or entries in `Filament\Schemas\Components\Tabs`, with the tab bar hidden in favor of the language dropdown.
 
 Methods before `translatable()` configure the field or entry and are copied to its locale clones. Methods after it configure the enclosing `Tabs` component. Put validation, formatting, and field-specific settings before `translatable()`, and layout settings such as `columnSpanFull()` after it.
+
+For table columns, call `translatable()` last, after search and sort configuration, so those methods do not replace its query callbacks.
 
 ## Testing a local package checkout
 
