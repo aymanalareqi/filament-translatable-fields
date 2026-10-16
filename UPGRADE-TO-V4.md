@@ -1,126 +1,114 @@
-# Upgrading to Filament v4
+# Upgrading from the Filament 3 version
 
-This guide will help you upgrade from the Filament v3 version of this package to the Filament v4 version.
+The package's 2.x line uses Filament's unified schema components. The current source supports Filament 4 and 5. See the [changelog](CHANGELOG.md) for the release status of individual features.
 
 ## Requirements
 
-Before upgrading, ensure your project meets these requirements:
+- **Filament 4 or 5**
+- **Laravel 10, 11, 12, or 13**
+- **PHP 8.2+**, subject to the requirements of your chosen Laravel and Filament versions
 
-- **Filament v4.0+** (currently in beta)
-- **Laravel 10, 11, or 12**
-- **PHP 8.2+**
+Upgrade your application to a supported Filament version before installing this package version. Allowing beta packages globally is not required when using stable releases.
 
-## Step-by-Step Upgrade
+## Update the package
 
-### 1. Update Composer Configuration
-
-First, update your `composer.json` to allow beta packages:
-
-```json
-{
-    "minimum-stability": "beta",
-    "prefer-stable": true
-}
-```
-
-Or run this command:
+Update the application's package requirement to the 2.x line, then resolve its dependencies:
 
 ```bash
-composer config minimum-stability beta
+composer require "alareqi/filament-translatable-fields:^2.0" --with-all-dependencies
+php artisan filament:assets --no-interaction
 ```
 
-### 2. Update the Package
+For an unreleased local checkout, follow the [path repository instructions](README.md#testing-a-local-package-checkout).
 
-Update the package to the v4 version:
+## Existing usage
 
-```bash
-composer update alareqi/filament-translatable-fields
-```
-
-### 3. Verify Installation
-
-Run the verification script to ensure everything is properly configured:
-
-```bash
-composer run verify-v4
-```
-
-## What Changed
-
-### Dependencies
-- **Filament**: Now requires v4.0+ (was v3.2+)
-- **PHP**: Now requires 8.2+ (was 8.2+, no change)
-- **Composer**: Now requires `minimum-stability: beta`
-
-### Component Namespaces
-- **Tab Components**: Now use unified `Filament\Schemas\Components\Tabs\Tab` namespace
-- **Forms/Infolists**: Both now use the same Tab component from the schema namespace
-
-### Internal Changes
-- Updated service provider with static `$name` property for v4 compatibility
-- Enhanced test suite for v4 compatibility
-- Updated documentation for v4
-
-## No Code Changes Required
-
-The great news is that **no code changes are required** in your application! The API remains exactly the same:
+Basic field and entry declarations remain supported:
 
 ```php
-// This still works exactly the same
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
+
 TextInput::make('title')
     ->label('Title')
     ->translatable();
 
-// Custom locales still work the same way
+TextEntry::make('title')
+    ->label('Title')
+    ->translatable();
+
 TextInput::make('description')
-    ->label('Description')
     ->translatable(true, [
-        'en' => 'English',
         'ar' => 'العربية',
-        'fr' => 'French'
+        'en' => 'English',
     ]);
 ```
 
-## Testing
+The wrapper uses `Filament\Schemas\Components\Tabs`, and its tabs use `Filament\Schemas\Components\Tabs\Tab`. Update any application customizations that reference older form-specific tab classes.
 
-After upgrading, test your translatable fields to ensure they work correctly:
+## Language switcher
 
-1. **Forms**: Verify that translatable fields render with tabs
-2. **Infolists**: Check that translatable entries display properly
-3. **Tables**: Confirm that translatable columns show the correct locale
-4. **Locale Switching**: Test that the locale selector works in tabs
+The current source replaces the native language select with a dropdown using the panel's primary colors. Text inputs, textareas, and rich editors show the switcher inside the control or toolbar. Other form fields and infolist entries show it beside the label.
+
+Labels no longer need a locale suffix because the switcher displays the active locale. Existing suffix text, hints, and entry formatting are retained. Each field or entry has its own language selection.
+
+Optional flags are configured on the panel plugin:
+
+```php
+FilamentTranslatableFieldsPlugin::make()
+    ->supportedLocales(['ar' => 'العربية', 'en' => 'English'])
+    ->localeFlags(['ar' => '🇸🇦', 'en' => '🇬🇧']);
+```
+
+## Validation
+
+Shared fluent rules, including `required()`, are now retained on every locale clone:
+
+```php
+TextInput::make('title')
+    ->required()
+    ->maxLength(255)
+    ->translatable();
+```
+
+Review fields that already call `required()` before `translatable()`: every configured locale will now be required. To require only one language, configure each locale explicitly:
+
+```php
+TextInput::make('title')
+    ->maxLength(255)
+    ->translatable(
+        configure: fn (TextInput $field, string $locale): TextInput => $field
+            ->required($locale === 'ar'),
+    );
+```
+
+`localeValidation()` is still supported. To migrate a field, move its rules into shared fluent methods and the per-locale `configure` callback, then remove its `localeValidation()` call. The callback receives the localized field and locale code; it modifies that field without replacing it.
+
+Call field-specific methods before `translatable()`. Methods chained afterward configure the enclosing `Tabs` component. Infolists are read-only and do not accept validation rules or the form-only `configure` callback.
+
+## Verification
+
+After upgrading, check these behaviors in the consuming application:
+
+1. Open and switch languages on text inputs, textareas, and rich editors.
+2. Save both translations and confirm they are retained when reopening the record.
+3. Submit missing or invalid values in an inactive locale and confirm validation still runs.
+4. Check optional locales, per-locale length limits, and any translated repeater fields.
+5. View infolist entries and switch each entry independently.
+6. Check any custom wrappers, suffixes, hints, and formatting used by your application.
+
+Run the package tests from the package checkout:
+
+```bash
+vendor/bin/phpunit --no-coverage
+```
+
+Run the consuming application's affected tests as well.
 
 ## Troubleshooting
 
-### Common Issues
+If the dropdown styles are missing or stale, run `php artisan filament:assets --no-interaction` in the application and refresh the browser. When developing the package's styles locally, run `npm run build:styles` in the package before publishing assets.
 
-**Issue**: "Class 'Filament\Schemas\Components\Tabs\Tab' not found"
-**Solution**: Ensure you have Filament v4 installed and `minimum-stability: beta` set
+If Composer reports a conflict, check the installed PHP, Laravel, and Filament versions against the package's `composer.json`. For local path repositories, also check that the version constraint matches the checkout's branch.
 
-**Issue**: Composer conflicts during update
-**Solution**: Try `composer update --with-all-dependencies`
-
-**Issue**: Tests failing
-**Solution**: Run `composer run test` to see specific test failures
-
-### Getting Help
-
-If you encounter issues during the upgrade:
-
-1. Check the [GitHub Issues](https://github.com/aymanalareqi/filament-translatable-fields/issues)
-2. Run the verification script: `composer run verify-v4`
-3. Check that Filament v4 is properly installed in your project
-
-## Rollback
-
-If you need to rollback to the v3 version:
-
-1. Switch to the v3 branch or tag
-2. Update your `composer.json` to use Filament v3
-3. Run `composer update`
-
-```bash
-# Example rollback
-composer require "alareqi/filament-translatable-fields:^1.0" "filament/filament:^3.2"
-composer config minimum-stability dev
-```
+Report package issues through [GitHub Issues](https://github.com/aymanalareqi/filament-translatable-fields/issues).
