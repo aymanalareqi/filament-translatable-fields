@@ -16,8 +16,10 @@ class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
     {
         $package
             ->name(static::$name)
+            ->hasViews()
+            ->hasTranslations()
             ->hasInstallCommand(function (InstallCommand $command) {
-                $composerFile = file_get_contents(__DIR__ . '/../composer.json');
+                $composerFile = file_get_contents(__DIR__.'/../composer.json');
 
                 if ($composerFile) {
                     $githubRepo = json_decode($composerFile, true)['homepage'] ?? null;
@@ -29,6 +31,7 @@ class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
                 }
             });
     }
+
     public function packageBooted(): void
     {
         // Asset Registration
@@ -37,6 +40,7 @@ class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
             $this->getAssetPackageName()
         );
     }
+
     protected function getAssetPackageName(): ?string
     {
         return 'alareqi/filament-translatable-fields';
@@ -47,8 +51,10 @@ class FilamentTranslatableFieldsServiceProvider extends PackageServiceProvider
      */
     protected function getAssets(): array
     {
+        $styles = Css::make('filament-translatable-fields-styles', __DIR__.'/../resources/dist/translatable-fields.css');
+
         return [
-            Css::make('filament-translatable-fields-styles', __DIR__ . '/../resources/dist/translatable-fields.css'),
+            $styles->html(fn (): string => $styles->getHref().'&hash='.hash_file('sha256', $styles->getPath())),
         ];
     }
 }

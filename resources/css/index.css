@@ -1,33 +1,68 @@
-.translatable-field-tabs {
-    .fi-tabs {
-        display: none;
-    }
-
-    .fi-sc-tabs-tab.fi-active {
-        margin-top: 0px !important;
-    }
-
-    .translatable-field-locale-select {
-        padding-top: 0.1rem;
-        padding-bottom: 0.1rem;
-        border-width: 0.1px;
-        font-size: 0.9rem;
-    }
+.translatable-field-tabs > .fi-tabs { display: none; }
+.translatable-field-tabs > .fi-sc-tabs-tab.fi-active { margin-top: 0; padding: 0; }
+.translatable-field-tabs .translatable-field-locale-select {
+    padding-block: .1rem;
+    border-width: .1px;
+    font-size: .9rem;
 }
-
-[dir=rtl] .translatable-field-tabs .translatable-field-locale-select {
-    padding-right: 0.75rem;
-    padding-left: 2.5rem;
+.translatable-input-suffix, .translatable-field-hint { display: inline-flex; align-items: center; gap: .5rem; }
+.translatable-locale-switcher { position: relative; }
+.fi-fo-text-input:has(.translatable-locale-switcher) { overflow: visible; }
+.translatable-locale-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-width: 4.25rem;
+    min-height: 2rem;
+    padding: .25rem .65rem;
+    border: 1px solid var(--translatable-switcher-border, var(--primary-300));
+    border-radius: .65rem;
+    background: var(--translatable-switcher-background, var(--primary-50));
+    color: var(--translatable-switcher-color, var(--primary-700));
+    font-size: .875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    cursor: pointer;
 }
-
-.fi-sc-section .translatable-field-tabs {
-    .fi-sc-tabs-tab.fi-active {
-        padding: 0px !important;
-    }
+.translatable-locale-trigger:focus-visible, .translatable-locale-option:focus-visible {
+    outline: 2px solid var(--translatable-switcher-border, var(--primary-300));
+    outline-offset: 2px;
 }
-
-.fi-sc-tabs-tab.fi-active .translatable-field-tabs {
-    .fi-sc-tabs-tab.fi-active {
-        padding: 0px !important;
-    }
+.translatable-locale-chevron, .translatable-locale-check { width: 1rem; height: 1rem; flex-shrink: 0; }
+.translatable-locale-options { min-width: 12rem; padding: .25rem; }
+.translatable-locale-option {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .5rem .75rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+.translatable-locale-option:hover, .translatable-locale-option-selected {
+    background: var(--translatable-option-background, var(--primary-50));
+    color: var(--translatable-switcher-color, var(--primary-700));
+}
+.translatable-locale-flag { font-size: 1.25rem; line-height: 1; }
+.translatable-locale-code { font-size: .875rem; font-weight: 500; }
+.translatable-locale-name { flex: 1; font-size: .75rem; }
+.translatable-field-tabs .fi-fo-rich-editor-toolbar-group:has(.translatable-locale-switcher) {
+    margin-inline-start: auto;
+    border-inline-start: 0;
+}
+.translatable-textarea-control { position: relative; }
+.translatable-textarea-control textarea { padding-right: 5.5rem; }
+.translatable-textarea-control:dir(rtl) textarea { padding-right: .75rem; padding-left: 5.5rem; }
+.translatable-textarea-switcher { position: absolute; inset-inline-end: .75rem; top: .25rem; }
+.dark .translatable-locale-trigger, .dark .translatable-locale-options {
+    --translatable-switcher-border: var(--primary-700);
+    --translatable-switcher-background: color-mix(in srgb, var(--primary-500) 16%, var(--gray-900));
+    --translatable-switcher-color: var(--primary-300);
+    --translatable-option-background: color-mix(in srgb, var(--primary-500) 16%, var(--gray-900));
 }

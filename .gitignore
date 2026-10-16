@@ -2,6 +2,8 @@
 /.vscode
 /vendor
 /node_modules
+/.phpunit.cache
+/build
 package-lock.json
 composer.phar
 composer.lock
